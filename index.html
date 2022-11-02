@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>WeatherApp</title>
+</head>
+<body>
+	<input type="text" class="input"></input>
+	<button class="button">Search</button>
+
+	<div class="weatherData"></div>
+
+	<script>
+		const input = document.querySelector('.input')
+		const button = document.querySelector('button')
+		const weatherDataDiv = document.querySelector('.weatherData')
+		const apiKey = '77cecc8bb4e64948157951367e605e55'
+
+		function searchBtnClicked() {
+			// window.open("index-weatherResults.html");
+			return fetch(`http://api.openweathermap.org/geo/1.0/direct?q=${inputGiven()}&limit=1&appid=${apiKey}`)
+			.then((data) => data.json())
+			.then((data) => {
+				const mappedLat = data.map((city) => city.lat)
+				const mappedLon = data.map((city) => city.lon)
+				return fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${mappedLat}&lon=${mappedLon}&appid=${apiKey}`)
+				.then((data) => data.json())
+				.then((data) => {
+					console.log(data)
+					const feelsLike = kelvinToCelcius(data.main.feels_like)
+					const humidity = data.main.humidity
+					const pressure = data.main.pressure
+					const temp = kelvinToCelcius(data.main.temp)
+					const maxTemp = kelvinToCelcius(data.main.temp_max)
+					const minTemp = kelvinToCelcius(data.main.temp_min)
+					const windSpeed = data.wind.speed
+					const windGust = data.wind.gust
+					const windDirection = degreesToCompass(data.wind.deg)
+					console.log(feelsLike,humidity,pressure,temp,maxTemp,minTemp)
+
+					weatherDataDiv.innerHTML = ''
+					weatherDataDiv.insertAdjacentHTML('beforeend', `
+					<ul>
+					<li>The temperature today feels like ${feelsLike} °C.</li>
+					<li>The humidity is ${humidity}%.</li>
+					<li>The atmospheric pressure is ${pressure} Pascals(Pa).</li>
+					<li>The current temperature is ${temp} °C.</li>
+					<li>The maximum temperature will be around ${maxTemp} °C.</li>
+					<li>The minimum temperature will be around ${minTemp} °C.</li>
+					<li>The wind direction today  is ${windDirection}.</li>
+					<li>The wind speed today is ${windSpeed}km/h, with gusts up to ${windGust} km/h!</li>
+					
+					</ul`)
+				})
+			})
+			
+		}
+		
+		function degreesToCompass(num) {
+			let number = (num / 22.5) + 0.5
+			let arrayIndex = number % 16
+			let fixedIndex = arrayIndex.toFixed(0)
+			console.log(fixedIndex)
+			const directionsArray = ["N","NNE","NE","ENE","E","ESE", "SE", "SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"]
+			return directionsArray[fixedIndex]
+		}
+		function kelvinToCelcius(Temp) {
+			let celcius =  Temp - 273.15
+			return  celcius.toFixed(2)
+		}
+		function inputGiven() {
+			console.log(input.value)
+			return input.value
+		}
+
+		input.addEventListener('keyup', inputGiven)
+		button.addEventListener('click', searchBtnClicked)
+	</script>
+</body>
+</html>
