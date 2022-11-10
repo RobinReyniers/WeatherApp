@@ -1,0 +1,39 @@
+body {
+  margin: 0;
+  padding: 0;
+}
+
+#map {
+  width: 50vw;
+  height: 35vh;
+}
+
+.nav {
+  padding: 1em;
+  background-color: burlywood;
+  display: flex;
+  justify-content: center;
+}
+
+.nav-input {
+  border: none;
+}
+.nav-button {
+  background-color: black;
+  color: white;
+  border: none;
+}
+
+.nav-button:hover {
+  background-color: rgb(145, 137, 137);
+  border: none;
+}
+
+.weatherData {
+  padding: 1em;
+  background-color: lightgoldenrodyellow;
+}
+
+.hourly {
+  padding: 1em;
+}

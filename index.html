@@ -5,64 +5,129 @@
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>WeatherApp</title>
+	<link rel="stylesheet" href="index.css">
+	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.2/dist/leaflet.css" integrity="sha256-sA+zWATbFveLLNqWO2gtiw3HL/lh1giY/Inf1BJ0z14=" crossorigin="" />
+	
 </head>
+
 <body>
-	<input type="text" class="input"></input>
-	<button class="button">Search</button>
+	<script src="https://unpkg.com/leaflet@1.9.2/dist/leaflet.js"
+	integrity="sha256-o9N1jGDZrf5tS+Ft4gbIK7mYMipq9lqpVJ91xHSyKhg="
+	crossorigin=""></script>
+	
+	
+	<nav class="nav">
+		<input type="text" placeholder='Search a city!' class="nav-input"></input>
+	<button class="nav-button">Search</button>
+	</nav>
 
 	<div class="weatherData"></div>
+	<div class="hourly"></div>
+	<div id="map"></div>
+	
+	<script >
+		
+		const input = document.querySelector('.nav-input');
+		const button = document.querySelector('.nav-button');
+		const weatherDataDiv = document.querySelector('.weatherData');
+		const hourlyDiv = document.querySelector('.hourly');
+		const apiKey = '77cecc8bb4e64948157951367e605e55';
+		
 
-	<script>
-		const input = document.querySelector('.input')
-		const button = document.querySelector('button')
-		const weatherDataDiv = document.querySelector('.weatherData')
-		const apiKey = '77cecc8bb4e64948157951367e605e55'
 
 		function searchBtnClicked() {
-			// window.open("index-weatherResults.html");
+			
 			return fetch(`http://api.openweathermap.org/geo/1.0/direct?q=${inputGiven()}&limit=1&appid=${apiKey}`)
 			.then((data) => data.json())
 			.then((data) => {
-				const mappedLat = data.map((city) => city.lat)
-				const mappedLon = data.map((city) => city.lon)
-				return fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${mappedLat}&lon=${mappedLon}&appid=${apiKey}`)
+				console.log(data)
+				const Lat = data.map((city) => city.lat)
+				const Lon = data.map((city) => city.lon)
+				renderMap(Lat[0],Lon[0])
+
+				return fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${Lat}&lon=${Lon}&appid=${apiKey}`)
 				.then((data) => data.json())
 				.then((data) => {
 					console.log(data)
-					const feelsLike = kelvinToCelcius(data.main.feels_like)
-					const humidity = data.main.humidity
-					const pressure = data.main.pressure
-					const temp = kelvinToCelcius(data.main.temp)
-					const maxTemp = kelvinToCelcius(data.main.temp_max)
-					const minTemp = kelvinToCelcius(data.main.temp_min)
-					const windSpeed = data.wind.speed
-					const windGust = data.wind.gust
-					const windDirection = degreesToCompass(data.wind.deg)
-					console.log(feelsLike,humidity,pressure,temp,maxTemp,minTemp)
-
-					weatherDataDiv.innerHTML = ''
-					weatherDataDiv.insertAdjacentHTML('beforeend', `
-					<ul>
-					<li>The temperature today feels like ${feelsLike} °C.</li>
-					<li>The humidity is ${humidity}%.</li>
-					<li>The atmospheric pressure is ${pressure} Pascals(Pa).</li>
-					<li>The current temperature is ${temp} °C.</li>
-					<li>The maximum temperature will be around ${maxTemp} °C.</li>
-					<li>The minimum temperature will be around ${minTemp} °C.</li>
-					<li>The wind direction today  is ${windDirection}.</li>
-					<li>The wind speed today is ${windSpeed}km/h, with gusts up to ${windGust} km/h!</li>
 					
-					</ul`)
+						weatherDataDiv.innerHTML = ''
+						weatherDataDiv.insertAdjacentHTML('beforeend', `
+					<h2>${data.name}</h2>
+					<ul class='dataList'>
+					<li class='dataList_item'>Feels-like: ${kelvinToCelcius(data.main.feels_like)} °C</li>
+					<li class='dataList_item'>Humidity: ${data.main.humidity}%</li>
+					<li class='dataList_item'>Pressure: ${data.main.pressure} Pascals(Pa)</li>
+					<li class='dataList_item'>temp: ${kelvinToCelcius(data.main.temp)} °C</li>
+					<li class='dataList_item'>Maximum temp: ${kelvinToCelcius(data.main.temp_max)} °C</li>
+					<li class='dataList_item'>Minimum temp: ${kelvinToCelcius(data.main.temp_min)} °C</li>
+					<li class='dataList_item'>Wind:  ${data.wind.speed} ${degreesToCompass(data.wind.deg)}</li>
+					
+					
+					</ul>`)
+					if(data.wind.gust !== undefined) {
+						weatherDataDiv.lastChild.innerText += ''
+						weatherDataDiv.lastChild.innerText += `, with gusts up to ${data.wind.gust} km/h!`
+					}
+					
+
+					return fetch(`https://api.openweathermap.org/data/2.5/forecast?lat=${Lat}&lon=${Lon}&appid=${apiKey}`)
+				.then((data) => data.json())
+				.then((data) => {
+					console.log(data)
+					hourlyDiv.innerHTML = ''
+					const mappedData = data.list.map((item) => {
+						hourlyDiv.insertAdjacentHTML('beforeend', `
+						<h2>${item.dt_txt}</h2>
+					<ul class='dataList'>
+					<li class='dataList_item'>Feels-like: ${kelvinToCelcius(item.main.feels_like)} °C</li>
+					<li class='dataList_item'>Humidity: ${item.main.humidity}%</li>
+					<li class='dataList_item'>Pressure: ${item.main.pressure} Pascals(Pa)</li>
+					<li class='dataList_item'>Temp: ${kelvinToCelcius(item.main.temp)} °C</li>
+					<li class='dataList_item'>Maximum temp: ${kelvinToCelcius(item.main.temp_max)} °C</li>
+					<li class='dataList_item'>Minimum temp: ${kelvinToCelcius(item.main.temp_min)} °C</li>
+					<li class='dataList_item'>Wind: ${item.wind.speed} ${degreesToCompass(item.wind.deg)}</li>
+					
+					
+					</ul>
+						`)
+						if(item.wind.gust !== undefined) {
+						hourlyDiv.lastChild.innerText += ''
+						hourlyDiv.lastChild.innerText += `, with gusts up to ${item.wind.gust} km/h!`
+					}
+					})
+					
 				})
+				
+				})
+
+			
 			})
 			
 		}
+		
+		
+		function renderMap(Lat,Lon) {
+			let layer = 'temp_new'
+			const map = L.map('map', {
+  			center: [522, 142],
+  			zoom: 3.5
+				});
+				
+				L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+				maxZoom: 19,
+				attribution:
+				'&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+				}).addTo(map);
+				L.tileLayer(`https://tile.openweathermap.org/map/${layer}/{z}/{x}/{y}.png?appid=${apiKey}`).addTo(map)
+				map.setView([Lat,Lon], 15)
+				
+				}
+		
 		
 		function degreesToCompass(num) {
 			let number = (num / 22.5) + 0.5
 			let arrayIndex = number % 16
 			let fixedIndex = arrayIndex.toFixed(0)
-			console.log(fixedIndex)
 			const directionsArray = ["N","NNE","NE","ENE","E","ESE", "SE", "SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"]
 			return directionsArray[fixedIndex]
 		}
@@ -71,12 +136,16 @@
 			return  celcius.toFixed(2)
 		}
 		function inputGiven() {
-			console.log(input.value)
 			return input.value
 		}
 
+
+		
 		input.addEventListener('keyup', inputGiven)
 		button.addEventListener('click', searchBtnClicked)
 	</script>
+	
+	
+	
 </body>
 </html>
